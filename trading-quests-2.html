@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Quest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+  :root {
+    --gold:#c9a84c;--gold-light:#f0d080;--gold-dim:#6a5828;
+    --bg:#09090f;--bg2:#0e0e1a;--bg3:#14141f;--border:#252538;
+    --green:#27ae60;--green-dim:#1a4a30;--red:#c0392b;
+    --text:#cdc2a0;--text-dim:#6a6355;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;min-height:100vh;}
+  body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(201,168,76,0.05) 0%,transparent 70%);pointer-events:none;z-index:0;}
+  .container{max-width:960px;margin:0 auto;padding:20px 16px;position:relative;z-index:1;}
+  .header{text-align:center;margin-bottom:24px;}
+  .header h1{font-family:'Cinzel',serif;font-size:2rem;font-weight:900;color:var(--gold);letter-spacing:0.15em;text-shadow:0 0 50px rgba(201,168,76,0.5);}
+  .header p{color:var(--text-dim);font-style:italic;font-size:0.95rem;margin-top:4px;}
+  .hr{display:flex;align-items:center;gap:10px;margin:14px 0 0;}
+  .hr::before,.hr::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold-dim),transparent);}
+  .hr span{color:var(--gold);font-size:0.8rem;}
+  .player{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:20px;position:relative;overflow:hidden;}
+  .player::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);}
+  .player-row{display:flex;align-items:center;gap:18px;margin-bottom:16px;}
+  .avatar{width:60px;height:60px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold-dim),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.7rem;box-shadow:0 0 24px rgba(201,168,76,0.25);}
+  .player-name{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--gold-light);}
+  .player-rank{font-size:0.82rem;color:var(--text-dim);font-style:italic;margin-top:2px;}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .stat{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center;}
+  .stat-val{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);font-weight:700;line-height:1;}
+  .stat-label{font-size:0.68rem;color:var(--text-dim);margin-top:3px;text-transform:uppercase;letter-spacing:0.07em;}
+  .xp-wrap{margin-top:14px;}
+  .xp-top{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim);margin-bottom:5px;}
+  .xp-bg{height:7px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);overflow:hidden;}
+  .xp-fill{height:100%;background:linear-gradient(to right,var(--gold-dim),var(--gold));border-radius:4px;transition:width 0.8s ease;}
+  .grand{background:linear-gradient(135deg,#1a1408,#0e0e1a);border:1px solid var(--gold-dim);border-radius:12px;padding:18px 22px;margin-bottom:20px;position:relative;overflow:hidden;}
+  .grand::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);}
+  .grand-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px;}
+  .grand-desc{font-size:0.88rem;color:var(--text-dim);font-style:italic;margin-bottom:14px;line-height:1.5;}
+  .grand-progress{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .grand-dot{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:0.8rem;transition:all 0.3s;}
+  .grand-dot.done{border-color:var(--green);color:var(--green);background:rgba(39,174,96,0.08);}
+  .grand-reward{margin-top:14px;padding:12px 16px;background:rgba(201,168,76,0.06);border:1px dashed var(--gold-dim);border-radius:8px;font-size:0.85rem;color:var(--gold-light);line-height:1.6;}
+  .grand-reward strong{font-family:'Cinzel',serif;display:block;margin-bottom:4px;font-size:0.9rem;}
+  .sec-title{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+  .quest-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  @media(max-width:600px){.quest-grid{grid-template-columns:1fr;}}
+  .qcard{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;transition:border-color 0.2s;}
+  .qcard.done{border-color:var(--green-dim);}
+  .qcard.done::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--green),transparent);}
+  .qcard:not(.done)::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--gold-dim),transparent);}
+  .qcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .qcard-name{font-family:'Cinzel',serif;font-size:0.88rem;color:var(--gold-light);}
+  .badge{font-size:0.65rem;padding:2px 8px;border-radius:20px;font-family:'Cinzel',serif;letter-spacing:0.04em;flex-shrink:0;}
+  .badge-active{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid var(--gold-dim);}
+  .badge-done{background:rgba(39,174,96,0.12);color:var(--green);border:1px solid var(--green-dim);}
+  .qdesc{font-size:0.82rem;color:var(--text-dim);font-style:italic;margin-bottom:12px;line-height:1.45;}
+  .dots{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+  .dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:var(--text-dim);transition:all 0.3s;font-family:'Cinzel',serif;}
+  .dot.ok{background:var(--green);border-color:var(--green);color:#fff;font-size:0.8rem;}
+  .dot-info{font-size:0.72rem;color:var(--text-dim);font-style:italic;}
+  .qrewards{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .chip{font-size:0.7rem;padding:2px 9px;border-radius:20px;background:rgba(201,168,76,0.08);border:1px solid var(--gold-dim);color:var(--gold);}
+  .qactions{display:flex;gap:6px;flex-wrap:wrap;}
+  .btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.04em;transition:all 0.2s;}
+  .btn-g{background:linear-gradient(135deg,#1a4a30,#27ae60);color:#fff;}
+  .btn-g:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(39,174,96,0.3);}
+  .btn-r{background:rgba(192,57,43,0.12);color:var(--red);border:1px solid rgba(192,57,43,0.25);}
+  .btn-r:hover{background:rgba(192,57,43,0.22);}
+  .btn-x{background:rgba(255,255,255,0.04);color:var(--text-dim);border:1px solid var(--border);font-size:0.68rem;}
+  .btn-x:hover{color:var(--text);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+  .book-dot{width:auto!important;border-radius:20px!important;padding:0 12px!important;cursor:pointer;font-size:0.75rem!important;}
+  .book-dot:hover{border-color:var(--gold-dim)!important;color:var(--text)!important;}
+  .log-list{list-style:none;}
+  .log-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--text-dim);}
+  .ldot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .ldot.w{background:var(--green);}.ldot.l{background:var(--red);}.ldot.x{background:var(--gold);}
+  .ltime{margin-left:auto;font-size:0.7rem;opacity:0.45;flex-shrink:0;}
+  .toast{position:fixed;top:16px;right:16px;z-index:200;background:var(--bg3);border:1px solid var(--gold-dim);border-radius:10px;padding:12px 18px;font-family:'Cinzel',serif;color:var(--gold);font-size:0.85rem;transform:translateX(120%);transition:transform 0.35s cubic-bezier(.4,0,.2,1);max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+  .toast.show{transform:translateX(0);}
+  .toast-sub{font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--text-dim);margin-top:3px;font-style:italic;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:300;display:none;align-items:center;justify-content:center;}
+  .overlay.show{display:flex;animation:fi 0.3s ease;}
+  @keyframes fi{from{opacity:0}to{opacity:1}}
+  .overlay-box{background:var(--bg3);border:2px solid var(--gold);border-radius:14px;padding:36px 44px;text-align:center;box-shadow:0 0 80px rgba(201,168,76,0.25);max-width:340px;}
+  .overlay-box h2{font-family:'Cinzel',serif;font-size:1.8rem;color:var(--gold);margin-bottom:6px;text-shadow:0 0 30px rgba(201,168,76,0.5);}
+  .overlay-box p{font-style:italic;color:var(--text-dim);margin-bottom:16px;font-size:0.9rem;}
+  .overlay-box .new-rank{font-family:'Cinzel',serif;color:var(--gold-light);font-size:1.05rem;margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><div id="t-title"></div><div class="toast-sub" id="t-sub"></div></div>
+
+<div class="overlay" id="lvlup">
+  <div class="overlay-box">
+    <div style="font-size:2.8rem;margin-bottom:10px" id="lvl-av">⚔️</div>
+    <h2>LEVEL UP!</h2>
+    <p>Du hast dich weiterentwickelt</p>
+    <div class="new-rank" id="lvl-rank"></div>
+    <button class="btn btn-g" onclick="closeOv('lvlup')">Weiter kämpfen ⚔</button>
+  </div>
+</div>
+
+<div class="overlay" id="grand-win">
+  <div class="overlay-box">
+    <div style="font-size:2.8rem;margin-bottom:10px">🏆</div>
+    <h2>GRANDMASTER!</h2>
+    <p>Alle 5 Quests abgeschlossen</p>
+    <div class="new-rank" style="line-height:1.6;margin-bottom:20px">Du hast bewiesen, dass du bereit bist.<br>Erhöhe dein Kapital — du hast es verdient.</div>
+    <button class="btn btn-g" onclick="closeOv('grand-win')">Zum nächsten Kapitel</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>⚔ TRADING QUEST</h1>
+    <p>Disziplin schlägt Glück — immer.</p>
+    <div class="hr"><span>◆</span></div>
+  </div>
+
+  <div class="player">
+    <div class="player-row">
+      <div class="avatar" id="av">🧙</div>
+      <div><div class="player-name">Alexander</div><div class="player-rank" id="p-rank">Rang I · Lehrling des Marktes</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="s-lvl">1</div><div class="stat-label">Level</div></div>
+      <div class="stat"><div class="stat-val" id="s-xp">0</div><div class="stat-label">Gesamt XP</div></div>
+      <div class="stat"><div class="stat-val" id="s-wins">0</div><div class="stat-label">Wins</div></div>
+      <div class="stat"><div class="stat-val" id="s-trades">0</div><div class="stat-label">Trades</div></div>
+      <div class="stat"><div class="stat-val" id="s-q">0/5</div><div class="stat-label">Quests ✓</div></div>
+    </div>
+    <div class="xp-wrap">
+      <div class="xp-top"><span>XP zum nächsten Level</span><span id="xp-lbl">0 / 100</span></div>
+      <div class="xp-bg"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="grand">
+    <div class="grand-title">🏆 GRAND QUEST — Meister des Marktes</div>
+    <div class="grand-desc">Alle 5 Quests laufen parallel. Beweise Disziplin auf allen Ebenen gleichzeitig — dann hast du dir die Belohnung wirklich verdient.</div>
+    <div class="grand-progress">
+      <div class="grand-dot" id="gd1">🎯 3× Win 1:2</div>
+      <div class="grand-dot" id="gd2">🛡️ 5× Stop gehalten</div>
+      <div class="grand-dot" id="gd3">📊 100 Trades</div>
+      <div class="grand-dot" id="gd4">⏸️ 6× Pause</div>
+      <div class="grand-dot" id="gd5">📚 3 Bücher</div>
+    </div>
+    <div class="grand-reward">
+      <strong>🎁 Deine Belohnung:</strong>
+      Wenn alle 5 Quests erfüllt sind, überweist du dir selbst zusätzliches Kapital auf dein Trading-Konto. Nicht weil du Glück hattest — sondern weil du Disziplin bewiesen hast.
+    </div>
+  </div>
+
+  <div class="sec-title">📜 Quests — alle parallel aktiv</div>
+  <div class="quest-grid">
+
+    <div class="qcard" id="q1card">
+      <div class="qcard-top"><div class="qcard-name">🎯 Der erste Schwur</div><span class="badge badge-active" id="q1badge">Aktiv</span></div>
+      <div class="qdesc">3 Wins in Folge mit R:R ≥ 1:2. Setze deinen Take Profit und rühre ihn nicht an. Gier bricht den Streak.</div>
+      <div class="dots">
+        <div class="dot" id="q1d1">1</div><div class="dot" id="q1d2">2</div><div class="dot" id="q1d3">3</div>
+        <span class="dot-info" id="q1info">0 von 3 in Folge</span>
+      </div>
+      <div class="qrewards"><span class="chip">+50 XP</span><span class="chip">🏅 Disziplinierter</span></div>
+      <div class="qactions">
+        <button class="btn btn-g" id="q1w" onclick="q1(true)">✓ Win 1:2+</button>
+        <button class="btn btn-r" id="q1l" onclick="q1(false)">✗ Streak weg</button>
+        <button class="btn btn-x" onclick="resetQ1()">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="qcard" id="q2card">
+      <div class="qcard-top"><div class="qcard-name">🛡️ Der eiserne Stopp</div><span class="badge badge-active" id="q2badge">Aktiv</span></div>
+      <div class="qdesc">5 Trades, bei denen der Stop Loss niemals nach unten verschoben wird — auch wenn es wehtut. Konsequenz ist deine Rüstung.</div>
+      <div class="dots">
+        <div class="dot" id="q2d1">1</div><div class="dot" id="q2d2">2</div><div class="dot" id="q2d3">3</div><div class="dot" id="q2d4">4</div><div class="dot" id="q2d5">5</div>
+        <span class="dot-info" id="q2info">0 von 5</span>
+      </div>
+      <div class="qrewards"><span class="chip">+80 XP</span><span class="chip">🏅 Eisenhände</span></div>
+      <div class="qactions">
+        <button class="btn btn-g" id="q2w" onclick="q2(true)">✓ Stop gehalten</button>
+        <button class="btn btn-r" id="q2l" onclick="q2(false)">✗ Stop verschoben</button>
+      </div>
+    </div>
+
+    <div class="qcard" id="q3card">
+      <div class="qcard-top"><div class="qcard-name">📊 Die Hundert</div><span class="badge badge-active" id="q3badge">Aktiv</span></div>
+      <div class="qdesc">100 Trades — egal ob Gewinn oder Verlust. Konsistenz und Datenmasse schaffen die Klarheit, die du brauchst.</div>
+      <div style="margin-bottom:10px">
+        <div style="height:7px;background:var(--bg2);border-radius:4px;border:1px solid var(--border);overflow:hidden;margin-bottom:5px">
+          <div id="q3bar" style="height:100%;background:linear-gradient(to right,var(--gold-dim),var(--gold));border-radius:4px;transition:width 0.5s ease;width:0%"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-dim)" id="q3info">0 von 100 Trades</div>
+      </div>
+      <div class="qrewards"><span class="chip">+200 XP</span><span class="chip">🏅 Hundert-Krieger</span></div>
+      <div class="qactions">
+        <button class="btn btn-g" id="q3w" onclick="q3(true)">✓ Trade — Win</button>
+        <button class="btn btn-r" id="q3l" onclick="q3(false)">✗ Trade — Loss</button>
+      </div>
+    </div>
+
+    <div class="qcard" id="q4card">
+      <div class="qcard-top"><div class="qcard-name">⏸️ Der Krieger pausiert</div><span class="badge badge-active" id="q4badge">Aktiv</span></div>
+      <div class="qdesc">6× die Circuit Breaker Regel einhalten: nach 3 roten ODER 3 grünen Tagen in Folge wirklich pausieren. Stärke zeigt sich auch im Stillhalten.</div>
+      <div class="dots">
+        <div class="dot" id="q4d1">1</div><div class="dot" id="q4d2">2</div><div class="dot" id="q4d3">3</div>
+        <div class="dot" id="q4d4">4</div><div class="dot" id="q4d5">5</div><div class="dot" id="q4d6">6</div>
+        <span class="dot-info" id="q4info">0 von 6</span>
+      </div>
+      <div class="qrewards"><span class="chip">+100 XP</span><span class="chip">🏅 Meister der Geduld</span></div>
+      <div class="qactions">
+        <button class="btn btn-g" id="q4w" onclick="q4()">✓ Pause eingehalten</button>
+      </div>
+    </div>
+
+    <div class="qcard" id="q5card" style="grid-column:1/-1">
+      <div class="qcard-top"><div class="qcard-name">📚 Die drei Weisen</div><span class="badge badge-active" id="q5badge">Aktiv</span></div>
+      <div class="qdesc">Lies 3 Trading-Bücher vollständig durch. Wissen ist dein unsichtbarer Vorteil. Klicke ein Buch an wenn du es beendet hast.</div>
+      <div class="dots" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div class="dot book-dot" id="q5d1" onclick="toggleBook(0)">📖 Elder — Alles über Trading</div>
+        <div class="dot book-dot" id="q5d2" onclick="toggleBook(1)">📖 Mark Douglas — Trading in the Zone</div>
+        <div class="dot book-dot" id="q5d3" onclick="toggleBook(2)">📖 John Carter — Mastering the Trade</div>
+        <span class="dot-info" id="q5info">0 von 3 gelesen</span>
+      </div>
+      <div class="qrewards"><span class="chip">+120 XP</span><span class="chip">🏅 Der Wissende</span></div>
+    </div>
+
+  </div>
+
+  <div class="sec-title">📋 Aktivitätslog</div>
+  <ul class="log-list" id="log">
+    <li class="log-item"><div class="ldot x"></div><span>Dein Abenteuer beginnt — viel Erfolg, Trader.</span><span class="ltime">jetzt</span></li>
+  </ul>
+</div>
+
+<script>
+const RANKS=[{name:'Lehrling des Marktes',av:'🧙'},{name:'Chartleser',av:'📊'},{name:'Disziplinierter Trader',av:'⚔️'},{name:'Trendfolger',av:'🦅'},{name:'Meisterhändler',av:'🏆'}];
+const XP_LEVELS=[0,100,250,450,700];
+let S=loadState();
+function loadState(){
+  try{const d=localStorage.getItem('tq3');if(d)return JSON.parse(d);}catch(e){}
+  return{xp:0,totalWins:0,totalTrades:0,q1:{streak:0,done:false},q2:{count:0,done:false},q3:{count:0,done:false},q4:{count:0,done:false},q5:{books:[false,false,false],done:false},log:[],grandDone:false};
+}
+function save(){localStorage.setItem('tq3',JSON.stringify(S));}
+function getLevel(xp){let lv=1;for(let i=1;i<XP_LEVELS.length;i++){if(xp>=XP_LEVELS[i])lv=i+1;else break;}return Math.min(lv,5);}
+function qDone(){return[S.q1.done,S.q2.done,S.q3.done,S.q4.done,S.q5.done].filter(Boolean).length;}
+function el(id){return document.getElementById(id);}
+function now(){return new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+function addLog(t,msg){S.log.push({t,msg,time:now()});if(S.log.length>30)S.log.shift();}
+function gainXP(amt,reason){
+  const old=getLevel(S.xp);S.xp+=amt;addLog('x',`+${amt} XP — ${reason}`);
+  const nw=getLevel(S.xp);
+  if(nw>old){const r=RANKS[nw-1];el('lvl-av').textContent=r.av;el('lvl-rank').textContent=`Rang ${['I','II','III','IV','V'][nw-1]} · ${r.name}`;setTimeout(()=>el('lvlup').classList.add('show'),400);}
+}
+function toast(title,sub){el('t-title').textContent=title;el('t-sub').textContent=sub;const t=el('toast');t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3500);}
+function closeOv(id){el(id).classList.remove('show');}
+function checkGrand(){if(!S.grandDone&&qDone()===5){S.grandDone=true;setTimeout(()=>el('grand-win').classList.add('show'),600);}}
+function setQDone(q){
+  el(`${q}card`).className='qcard done';
+  el(`${q}badge`).className='badge badge-done';el(`${q}badge`).textContent='Abgeschlossen ✓';
+  el(`${q}card`).querySelectorAll('button').forEach(b=>b.disabled=true);
+}
+function render(){
+  const lv=getLevel(S.xp);const r=RANKS[lv-1];
+  const nx=XP_LEVELS[lv]||XP_LEVELS[XP_LEVELS.length-1];const pv=XP_LEVELS[lv-1]||0;
+  const pct=nx>pv?Math.min(100,((S.xp-pv)/(nx-pv))*100):100;
+  el('s-lvl').textContent=lv;el('s-xp').textContent=S.xp;el('s-wins').textContent=S.totalWins;
+  el('s-trades').textContent=S.totalTrades;el('s-q').textContent=qDone()+'/5';
+  el('av').textContent=r.av;el('p-rank').textContent=`Rang ${['I','II','III','IV','V'][lv-1]} · ${r.name}`;
+  el('xp-bar').style.width=pct+'%';el('xp-lbl').textContent=`${S.xp} / ${nx} XP`;
+  // Q1
+  for(let i=1;i<=3;i++){const d=el(`q1d${i}`);if(i<=S.q1.streak){d.className='dot ok';d.textContent='✓';}else{d.className='dot';d.textContent=i;}}
+  el('q1info').textContent=`${S.q1.streak} von 3 in Folge`;
+  if(S.q1.done)setQDone('q1');
+  // Q2
+  for(let i=1;i<=5;i++){const d=el(`q2d${i}`);if(i<=S.q2.count){d.className='dot ok';d.textContent='✓';}else{d.className='dot';d.textContent=i;}}
+  el('q2info').textContent=`${S.q2.count} von 5`;
+  if(S.q2.done)setQDone('q2');
+  // Q3
+  el('q3bar').style.width=Math.min(100,(S.q3.count/100)*100)+'%';
+  el('q3info').textContent=`${S.q3.count} von 100 Trades`;
+  if(S.q3.done)setQDone('q3');
+  // Q4
+  for(let i=1;i<=6;i++){const d=el(`q4d${i}`);if(i<=S.q4.count){d.className='dot ok';d.textContent='✓';}else{d.className='dot';d.textContent=i;}}
+  el('q4info').textContent=`${S.q4.count} von 6`;
+  if(S.q4.done)setQDone('q4');
+  // Q5
+  const br=S.q5.books.filter(Boolean).length;
+  for(let i=0;i<3;i++){const d=el(`q5d${i+1}`);if(S.q5.books[i]){d.className='dot book-dot ok';}else{d.className='dot book-dot';}}
+  el('q5info').textContent=`${br} von 3 gelesen`;
+  if(S.q5.done)setQDone('q5');
+  // Grand
+  [S.q1.done,S.q2.done,S.q3.done,S.q4.done,S.q5.done].forEach((d,i)=>{el(`gd${i+1}`).className='grand-dot'+(d?' done':'');});
+  // Log
+  const ul=el('log');ul.innerHTML='';
+  const items=S.log.length?[...S.log].reverse().slice(0,15):[{t:'x',msg:'Dein Abenteuer beginnt — viel Erfolg, Trader.',time:'jetzt'}];
+  items.forEach(item=>{const li=document.createElement('li');li.className='log-item';li.innerHTML=`<div class="ldot ${item.t}"></div><span>${item.msg}</span><span class="ltime">${item.time}</span>`;ul.appendChild(li);});
+}
+function q1(win){
+  if(S.q1.done)return;S.totalTrades++;
+  if(win){S.totalWins++;S.q1.streak++;addLog('w',`Quest 1: Win #${S.q1.streak} — R:R 1:2 ✓`);
+    if(S.q1.streak>=3){S.q1.done=true;gainXP(50,'Der erste Schwur abgeschlossen');toast('🏅 Quest 1 abgeschlossen!','+50 XP · Titel: Disziplinierter');checkGrand();}
+  }else{S.q1.streak=0;addLog('l','Quest 1: Streak gebrochen — von vorne');toast('💀 Streak gebrochen','Ruhig bleiben. Von vorne.');}
+  save();render();
+}
+function resetQ1(){if(S.q1.done)return;S.q1.streak=0;addLog('x','Quest 1: Reset');save();render();}
+function q2(win){
+  if(S.q2.done)return;S.totalTrades++;
+  if(win){S.q2.count++;addLog('w',`Quest 2: Stop gehalten #${S.q2.count}/5`);
+    if(S.q2.count>=5){S.q2.done=true;gainXP(80,'Der eiserne Stopp abgeschlossen');toast('🏅 Quest 2 abgeschlossen!','+80 XP · Titel: Eisenhände');checkGrand();}
+  }else{S.q2.count=Math.max(0,S.q2.count-1);addLog('l',`Quest 2: Stop verschoben — jetzt ${S.q2.count}/5`);toast('⚠️ Stop verschoben',`Fortschritt: ${S.q2.count}/5`);}
+  save();render();
+}
+function q3(win){
+  if(S.q3.done)return;S.totalTrades++;S.q3.count++;
+  if(win){S.totalWins++;addLog('w',`Trade #${S.q3.count}/100 — Win`);}
+  else{addLog('l',`Trade #${S.q3.count}/100 — Loss`);}
+  if(S.q3.count>=100){S.q3.done=true;gainXP(200,'Die Hundert abgeschlossen');toast('🏅 Quest 3 abgeschlossen!','+200 XP · Titel: Hundert-Krieger');checkGrand();}
+  save();render();
+}
+function q4(){
+  if(S.q4.done)return;S.q4.count++;addLog('x',`Quest 4: Pause eingehalten #${S.q4.count}/6`);
+  if(S.q4.count>=6){S.q4.done=true;gainXP(100,'Der Krieger pausiert abgeschlossen');toast('🏅 Quest 4 abgeschlossen!','+100 XP · Titel: Meister der Geduld');checkGrand();}
+  else{toast('⏸️ Pause gezählt!',`${S.q4.count}/6 — stark!`);}
+  save();render();
+}
+function toggleBook(n){
+  if(S.q5.done)return;S.q5.books[n]=!S.q5.books[n];
+  const br=S.q5.books.filter(Boolean).length;
+  if(S.q5.books[n]){addLog('x',`Quest 5: Buch ${n+1} abgehakt ✓`);toast('📚 Buch gelesen!',`${br}/3 — Wissen ist Macht`);}
+  if(br>=3){S.q5.done=true;gainXP(120,'Die drei Weisen abgeschlossen');toast('🏅 Quest 5 abgeschlossen!','+120 XP · Titel: Der Wissende');checkGrand();}
+  save();render();
+}
+render();
+</script>
+</body>
+</html>
